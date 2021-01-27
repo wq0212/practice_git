@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Make BSS Great Again (bshs.or.kr)
+paths:
+  #comment CRUD
+  /board/<int:pk>/comment/create: #path는 어떻게 가져가야 하는지 모르겠습니다.
+    post:
+      tags:
+        - Comment_Create
+      summary: Comment Create
+      operationId: Comment_Create
+      description: |
+        Create new comment when authentication is True
+
+      header:
+        author:
+          type: string #유저 데이터를 받아오는 거면 타입이 apiKey 인가요?
+        comment-body:
+          type: string
+          description: | #comment에도 사진 업로드 기능 지원? or text만?
+            Use CKEditor 
+        modify_dt: 
+          type: string # YYYY-MM-DD hh:mm
+          description: |
+            init create_dt -> if user update comment: modify_dt
+        declaration_count:
+          type: integer
+          default: 0
+          description: >
+            when other user declaration this.comment -> declaration_count+=1
+            if (declaration_count > 5): view==blind
+
+          Notification_email: #어떤식으로 구현되는 건지 모르겠습니다.
+            type: http
+            description: |
+              send email to this.post author (alert comment)
+        
+        
+      responses:
+        '201':
+          description: Successfully post comment
+        '400':
+          description: Unsuccessfully post comment
+
+  /board/<int:pk>/comment/<int:pk>/delete:
+    delete:
+      tags:
+        - Comment_Delete
+      summary: Comment Delete
+      operationId: Comment_Delete
+      description: |
+        Delete comment when authentication is True && author==user
+      responses:
+        '201':
+          description: Successfully delete comment -> erase in DB
+        '400':
+          description: Unsuccessfully delete comment
+        '405':
+          description: user != comment author
+
+  /board/<int:pk>/comment/<int:pk>/update:
+    update:
+      tags:
+        - Comment_Update
+      summary: Comment Update
+      operationId: Comment_Update
+      description: |
+        Update comment when authentication is True && author==user
+      header:
+        comment-body:
+          type: string
+          description: | 
+            Fixed text
+        modify_dt: 
+          type: string # YYYY-MM-DD hh:mm
+          description: |
+            update time ->  modify_dt
+      responses:
+        '201':
+          description: Successfully update comment
+        '400':
+          description: Unsuccessfully update comment
+        '405':
+          description: user != comment author
+
+  /board/<int:pk>:
+    view:
+      tags:
+        - Comment_View
+      summary: Comment View
+      operationId: Comment_View
+      description: |
+        View all comment this.post && except: blind==True (by declaration_count)
+      header:
+        author:
+          type: string
+        comment-body:
+          type: string
+        modify_dt: 
+          type: string
+
+        declaration_btn:
+          type: button
+          description: | #'user당 1회만 허용'은 어떻게 적어야 할지 모르겠습니다.
+            this.comment declaration_count+=1 when authentication is True
+
+  #comment reply CRUD (대댓글)
+  /board/<int:pk>/comment/<int:pk>/comment/create: 
+    post:
+      tags:
+        - Comment_Reply_Create
+      summary: Comment Reply Create
+      operationId: Comment_Reply_Create
+      description: |
+        Create new comment's reply when authentication is True
+
+      header:
+        author:
+          type: string
+        comment-body:
+          type: string
+        modify_dt: 
+          type: string
+
+        declaration_count:
+          type: integer
+          default: 0
+
+          Notification_email: #대댓글은 어디로 이메일을 보내나요? 
+            type: http
+            description: | #post author or comment author
+              send email to this.post author (alert comment) 
